@@ -141,7 +141,8 @@ exports.getUserBookings = async (req, res) => {
             if (err) {
                 return res.status(403).json({ error: 'Token không hợp lệ' });
             }
-            const { bookingCode, paymentStatus } = req.body;
+            const { bookingCode, paymentStatus, size, page } = req.body;
+            const currentPage = parseInt(page)
             const pipeline = [
                 { $match: { userEmail: user.email } },
                 { $sort: { createDate: -1 } }, // Sắp xếp theo createDate từ mới nhất đến cũ nhất
@@ -154,9 +155,15 @@ exports.getUserBookings = async (req, res) => {
             if (paymentStatus != null) {
                 pipeline.push({ $match: { paymentStatus: paymentStatus } });
             }
+
+            pipeline.push(
+                { $skip: (currentPage - 1) * size },
+                { $limit: parseInt(size) }
+            );
     
             const userData = await Booking.aggregate(pipeline);
-            res.status(200).json(userData);
+            const length = await Booking.countDocuments(pipeline[0].$match || {});
+            res.status(200).json({data: userData, length: length});
         });
 
     } catch (error) {
@@ -221,12 +228,12 @@ exports.deleteBooking = async (req, res) => {
         const token = req.headers.authorization;
 
         if (!token) {
-            return res.status(401).json({ error: 'Không có token xác thực' });
+            return res.status(401).json({ message: 'Không có token xác thực' });
         }
 
         jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
             if (err) {
-                return res.status(403).json({ error: 'Token không hợp lệ' });
+                return res.status(403).json({ message: 'Token không hợp lệ' });
             }
 
             const existingUser = await User.findOne(
@@ -297,10 +304,10 @@ exports.deleteBooking = async (req, res) => {
                     }
                     res.status(200).json({ message: 'Xóa thành công.' });
                 } else {
-                    res.status(404).json({ error: 'Đặt chỗ không tồn tại hoặc không thể cập nhật.' });
+                    res.status(404).json({ message: 'Đặt chỗ không tồn tại hoặc không thể cập nhật.' });
                 }
             } else {
-                res.status(404).json({ error: 'Người dùng không tồn tại.' });
+                res.status(404).json({ message: 'Người dùng không tồn tại.' });
             }
         })
     } catch (error) {

@@ -8,7 +8,7 @@ const Booking = require('../model/bookingModel');
 
 dotenv.config();
 
-const clientUrl = 'https://gotrip-client.onrender.com'
+const clientUrl = 'http://localhost:3000'
 
 const generateAccessToken = (
     email,

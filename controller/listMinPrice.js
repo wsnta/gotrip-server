@@ -42,7 +42,7 @@ exports.getListPrice = async (req, res) => {
                       $lte: lastDayOfMonth.toDate(),
                     },
                     startPoint: startPoint,
-                    endPoint: endPoint
+                    endPoint: endPoint,
                   },
             }
         ])
