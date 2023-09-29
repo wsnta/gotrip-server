@@ -6,6 +6,7 @@ const Transaction = require('../controller/transaction')
 const User = require('../controller/user')
 const MinPrice = require('../controller/listMinPrice')
 const checkRole = require('../middlewares/checkRole');
+const GetFlight = require('../controller/get-flight')
 const Fee = require('../controller/fee')
 
 router.post('/login', Auth.login)
@@ -44,5 +45,8 @@ router.put('/update-user-inf', User.updateUserInf)
 
 router.put('/update-fee', Fee.updateFee);
 router.get('/get-fee', Fee.getFeeValues);
+
+router.post('/get-filght', GetFlight.getFlight)
+router.post('/get-filght-return', GetFlight.getFlightReturn)
 
 module.exports = router

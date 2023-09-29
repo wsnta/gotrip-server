@@ -29,7 +29,7 @@ app.get('/', function (req, res) {
 const httpServer = require('http').createServer(app);
 const io = require('socket.io')(httpServer, {
     cors: {
-        origin: "https://gotrip-client-e0yo.onrender.com",
+        origin: "http://localhost:3000",
         methods: ["GET", "POST"]
     }
 });
