@@ -69,16 +69,7 @@ exports.getListPrice = async (req, res) => {
          }
 
          const headers = {
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate",
-            "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
-            "Connection": "keep-alive",
-            "Content-Length": JSON.stringify(data).length,
-            "Content-Type": "application/json; charset=UTF-8",
-            "Host": "plugin.datacom.vn",
-            "Origin": "http://wpv08.webphongve.vn",
-            "Referer": "http://wpv08.webphongve.vn/",
-            "User-Agent": navigator.userAgent,
+           
         };
 
         const responses = await Promise.all(data.map((item) => fetchFlightData(item, headers)));
