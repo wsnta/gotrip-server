@@ -29,7 +29,7 @@ app.get('/', function (req, res) {
 const httpServer = require('http').createServer(app);
 const io = require('socket.io')(httpServer, {
     cors: {
-        origin: "https://gotrip-client-e0yo.onrender.com",
+        origin: "http://localhost:3000",
         methods: ["GET", "POST"]
     }
 });
@@ -62,7 +62,6 @@ const updateBlanceByTransaction = async (transaction) => {
         const { creditAmount, description } = transaction;
         const identifier = extractBlanceIdFromDescription(description);
         if (!identifier) {
-            console.log('Không tìm thấy mã định danh trong mô tả:', description);
             return '';
         }
         const existingUser = await User.findOne(
@@ -70,7 +69,6 @@ const updateBlanceByTransaction = async (transaction) => {
         );
 
         if (!existingUser) {
-            console.log(`Không tìm thấy người dùng với identifier ${identifier}`);
             return '';
         }
 
@@ -116,7 +114,6 @@ const updateBookingByTransaction = async (transaction) => {
         });
 
         if (!existingBooking) {
-            console.log(`Không tìm thấy booking với bookingId ${bookingId}`);
             return;
         }
         const bookingExists = await Booking.findById({
@@ -198,7 +195,6 @@ const updateBookingByTransaction = async (transaction) => {
                 const isEx = fareData.every((element) => element.bookingCode != null && element.airline != null)
                 if (fareData && fareData.length > 0 && isEx) {
                     const responses = await Promise.all(fareData.map((element) => fetchFlightData(element.bookingCode, element.airline)))
-                    console.log(responses)
                     const isMatch = responses.every((ele) => ele === 'Đã xuất vé thành công')
                     if (isMatch) {
                         await Booking.findByIdAndUpdate(
@@ -206,7 +202,6 @@ const updateBookingByTransaction = async (transaction) => {
                             { ticketingStatus: true },
                         );
                     }
-                    console.log('Da xuat ve')
                 }
             }
 

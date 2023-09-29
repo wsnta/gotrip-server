@@ -614,7 +614,6 @@ exports.getAllBookingsByEmail = async (req, res) => {
                 )
 
                 if (userByEmail) {
-                    console.log('email', email)
 
                     if (!userByEmail) {
                         return res.status(404).json({ error: 'Người dùng không tồn tại' });
