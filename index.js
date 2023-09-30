@@ -343,6 +343,9 @@ schedule.scheduleJob('*/10 * * * * *', async () => {
                         io.emit('transactions', differentTransactions);
                         console.log('Update')
                     } else {
+                        if (io.sockets.server.engine.clientsCount > 0) {
+                            io.close();
+                        }
                         console.log('No update')
                     }
                 }
