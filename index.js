@@ -6,6 +6,7 @@ const axios = require('axios');
 const schedule = require('node-schedule');
 const User = require('./model/userInf')
 const Booking = require('./model/bookingModel');
+const compression = require('compression'); 
 const dayjs = require('dayjs')
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
@@ -17,6 +18,7 @@ const route = require('./routes/route');
 const POST = 7777
 
 app.use(cors())
+app.use(compression());
 app.use(express.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
