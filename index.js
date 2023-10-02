@@ -6,7 +6,7 @@ const axios = require('axios');
 const schedule = require('node-schedule');
 const User = require('./model/userInf')
 const Booking = require('./model/bookingModel');
-const compression = require('compression'); 
+const compression = require('compression');
 const dayjs = require('dayjs')
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);

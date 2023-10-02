@@ -4,17 +4,17 @@ const listDbHost = process.env.LIST_MIN_PRICE
 const listDb = mongoose.createConnection(listDbHost);
 
 const minPriceSchema = new mongoose.Schema({
-    departDate: {
-        type: Date,
+    Key: {
+        type: String,
         require: true
     },
-    minPrice: Number,
-    startPoint: String,
-    endPoint: String,
-    currency: {
-        type: String,
-        default: "VNĐ"
-    },
+    DepartDate: String,
+    Airline: String,
+    MinFareAdt: Number,
+    MinTotalAdt: Number,
+    MinFareAdtFormat: String,
+    MinTotalAdtFormat: String,
+    ListFareData: [mongoose.Schema.Types.Mixed]
 }, {
     collection: 'minPrice'
 });

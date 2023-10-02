@@ -35,7 +35,6 @@ router.put('/update-ticket-status', Booking.updateTicketingStatus)
 router.delete('/delete-by-admin/:bookingId', Booking.deleteBookingById)
 router.get('/invoice-request', Booking.getInvoice)
 
-router.post('/updateListPrice', MinPrice.updateListPrice)
 router.get('/list-price', MinPrice.getListPrice);
 
 router.get('/getTransactionData', Transaction.getTransactions);
