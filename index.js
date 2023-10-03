@@ -254,6 +254,9 @@ const updateTransacion = async () => {
             callAgain = false
             const call = await fetchKey()
             callAgain = call
+            if(call === true){
+                return;
+            }
         } else {
             callAgain = false
             const currentDate = new Date();
@@ -308,6 +311,9 @@ const updateTransacion = async () => {
                 const call = await fetchKey()
                 console.log('Gọi lại', call)
                 callAgain = call
+                if(call === true){
+                    return;
+                }
             } else {
                 console.log('Không gọi lại')
                 callAgain = false
