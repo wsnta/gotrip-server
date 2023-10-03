@@ -235,31 +235,27 @@ const fetchKey = async () => {
             sessionId = sessionIdf
             deviceIdCommon = deviceIdCommonf
             console.log(deviceIdCommonf, sessionIdf)
-            return false
+            callAgain = false
         } else {
             console.error('Data not found in the response.');
-            return true
+            callAgain = true
         }
     } catch (error) {
         console.error('Error fetching key:', error.message);
         sessionId = ''
         deviceIdCommon = ''
-        return true
+        callAgain = true
     }
 };
 
 const updateTransacion = async () => {
     try {
-        if (callAgain === true) {
+        const existingValue = callAgain
+        if (existingValue === true) {
             console.log('Đang nhận session')
-            callAgain = false
-            const call = await fetchKey()
-            callAgain = call
-            if(call === true){
-                return;
-            }
+            await fetchKey()
+            return;
         } else {
-            callAgain = false
             const currentDate = new Date();
             const toDate = new Date().toLocaleDateString('vi-VN', {
                 day: '2-digit',
@@ -309,15 +305,10 @@ const updateTransacion = async () => {
             });
             const response = apiResponse.data;
             if (response.result.ok === false) {
-                const call = await fetchKey()
+                await fetchKey()
                 console.log('Gọi lại', call)
-                callAgain = call
-                if(call === true){
-                    return;
-                }
+                return;
             } else {
-                console.log('Không gọi lại')
-                callAgain = false
                 const existingBooking = await Transaction.find() ?? [];
                 const existingTransactionList = existingBooking
                 const responseTransactionList = response.transactionHistoryList;
@@ -370,7 +361,9 @@ const updateTransacion = async () => {
 }
 
 schedule.scheduleJob('*/15 * * * * *', async () => {
-    if (callAgain === false) {
+    const existingValue = callAgain
+    console.log('existingValue', existingValue)
+    if (existingValue === false) {
         console.log('Công việc đang chạy, bỏ qua lần chạy mới')
         return;
     }else{
