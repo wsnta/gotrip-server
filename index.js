@@ -247,21 +247,13 @@ const fetchKey = async () => {
     }
 };
 
-schedule.scheduleJob('*/15 * * * * *', async () => {
-
-    if(isRunning){
-        console.log('Công việc đang chạy, bỏ qua lần chạy mới')
-        return;
-    }
-
+const updateTransacion = async () => {
     try {
-        isRunning = true
         if (callAgain === true) {
             console.log('Đang nhận session')
             const call = await fetchKey()
             callAgain = call
         } else {
-
             const currentDate = new Date();
             const toDate = new Date().toLocaleDateString('vi-VN', {
                 day: '2-digit',
@@ -342,7 +334,7 @@ schedule.scheduleJob('*/15 * * * * *', async () => {
 
                     if (differentTransactions.length > 0) {
                         differentTransactions.forEach(async (transaction) => {
-                            updateBookingByTransaction(transaction);
+                            await updateBookingByTransaction(transaction);
                             const identifier = await updateBlanceByTransaction(transaction)
                             if (identifier !== '') {
                                 io.emit('identifier', identifier);
@@ -362,9 +354,19 @@ schedule.scheduleJob('*/15 * * * * *', async () => {
 
     } catch (error) {
         console.error('Error calling API:', error.message);
-    }finally{
+    } finally {
         callAgain = true
-        isRunning = false
+        console.log('Hoàn tất công việc')
+    }
+}
+
+schedule.scheduleJob('*/15 * * * * *', async () => {
+
+    if (callAgain === false) {
+        console.log('Công việc đang chạy, bỏ qua lần chạy mới')
+        return;
+    }else{
+        await updateTransacion()
     }
 });
 
