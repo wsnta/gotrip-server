@@ -387,7 +387,7 @@ const updateListPrice = async () => {
                         Year: `${yearValue}`,
                     }, headers);
 
-                    data.push(...responses.ListFare);
+                    data.push(responses);
                 }
             }
 
