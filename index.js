@@ -440,7 +440,7 @@ const updateListPrice = async () => {
     }
 }
 
-schedule.scheduleJob('*/59 * * * * *', async () => {
+schedule.scheduleJob('40 * * * *', async () => {
     try {
         await updateListPrice();
     } catch (error) {
