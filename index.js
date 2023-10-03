@@ -221,6 +221,7 @@ let sessionId = ''
 let deviceIdCommon = ''
 let callAgain = true;
 let isHasKey = false;
+let callUpdateTransacion = false;
 
 const fetchKey = async () => {
     try {
@@ -238,122 +239,118 @@ const fetchKey = async () => {
             console.log(deviceIdCommonf, sessionIdf)
             isHasKey = true
             callAgain = false
+            callUpdateTransacion = true
         } else {
             console.error('Data not found in the response.');
             callAgain = true
             isHasKey = false
+            callUpdateTransacion = false
         }
     } catch (error) {
         console.error('Error fetching key:', error.message);
         sessionId = ''
         deviceIdCommon = ''
-        callAgain = true,
+        callAgain = true
         isHasKey = false
+        callUpdateTransacion = false
     }
 };
 
 const updateTransacion = async () => {
     try {
-        const existingValue = callAgain
-        const existingHasKey = isHasKey
-        if (existingValue === true && existingHasKey === false) {
-            console.log('Đang nhận session')
+        console.log('Đã vào')
+        const currentDate = new Date();
+        const toDate = new Date().toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+
+        currentDate.setDate(currentDate.getDate() - 1);
+
+        const fromDate = currentDate.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+
+        const taikhoanmb = '0984227777';
+        const sotaikhoanmb = '0984227777';
+        const apiResponse = await axios.post('https://online.mbbank.com.vn/api/retail-web-transactionservice/transaction/getTransactionAccountHistory', {
+            accountNo: sotaikhoanmb,
+            deviceIdCommon: deviceIdCommon,
+            fromDate: fromDate,
+            historyNumber: '',
+            historyType: 'DATE_RANGE',
+            refNo: `${taikhoanmb}-${toDate}`,
+            sessionId: sessionId,
+            toDate: toDate,
+            type: 'ACCOUNT'
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Accept-Language': 'vi-US,vi;q=0.9',
+                'Authorization': 'Basic QURNSU46QURNSU4=',
+                'Connection': 'keep-alive',
+                'Host': 'online.mbbank.com.vn',
+                'Origin': 'https://online.mbbank.com.vn',
+                'Referer': 'https://online.mbbank.com.vn/information-account/source-account',
+                'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-origin',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+            }
+        });
+        const response = apiResponse.data;
+        console.log(response)
+        if (response.result.ok === false) {
             await fetchKey()
             return
-        } else {
-            const currentDate = new Date();
-            const toDate = new Date().toLocaleDateString('vi-VN', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-
-            currentDate.setDate(currentDate.getDate() - 1);
-
-            const fromDate = currentDate.toLocaleDateString('vi-VN', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-
-            const taikhoanmb = '0984227777';
-            const sotaikhoanmb = '0984227777';
-            const apiResponse = await axios.post('https://online.mbbank.com.vn/api/retail-web-transactionservice/transaction/getTransactionAccountHistory', {
-                accountNo: sotaikhoanmb,
-                deviceIdCommon: deviceIdCommon,
-                fromDate: fromDate,
-                historyNumber: '',
-                historyType: 'DATE_RANGE',
-                refNo: `${taikhoanmb}-${toDate}`,
-                sessionId: sessionId,
-                toDate: toDate,
-                type: 'ACCOUNT'
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'Accept-Language': 'vi-US,vi;q=0.9',
-                    'Authorization': 'Basic QURNSU46QURNSU4=',
-                    'Connection': 'keep-alive',
-                    'Host': 'online.mbbank.com.vn',
-                    'Origin': 'https://online.mbbank.com.vn',
-                    'Referer': 'https://online.mbbank.com.vn/information-account/source-account',
-                    'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
-                    'sec-ch-ua-mobile': '?0',
-                    'sec-ch-ua-platform': '"Windows"',
-                    'Sec-Fetch-Dest': 'empty',
-                    'Sec-Fetch-Mode': 'cors',
-                    'Sec-Fetch-Site': 'same-origin',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+        }
+        if (response.result.ok === true) {
+            const existingBooking = await Transaction.find() ?? [];
+            const existingTransactionList = existingBooking
+            const responseTransactionList = response.transactionHistoryList;
+            if (responseTransactionList.length > 0) {
+                const differentTransactions = [];
+                for (const responseTransaction of responseTransactionList) {
+                    let found = false;
+                    for (const existingTransaction of existingTransactionList) {
+                        if (existingTransaction.description === responseTransaction.description) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        const dateString = responseTransaction.transactionDate ?? '';
+                        const ddmmyyyy = dayjs(dateString, 'DD/MM/YYYY HH:mm:ss').format('YYYYMMDD')
+                        responseTransaction.transactionDateFormat = parseInt(ddmmyyyy)
+                        differentTransactions.push(responseTransaction);
+                    }
                 }
-            });
-            const response = apiResponse.data;
-            console.log(response)
-            if (response.result.ok === false) {
-                await fetchKey()
-                console.log('Gọi lại', call)
-                return
-            } else {
-                const existingBooking = await Transaction.find() ?? [];
-                const existingTransactionList = existingBooking
-                const responseTransactionList = response.transactionHistoryList;
-                if (responseTransactionList.length > 0) {
-                    const differentTransactions = [];
-                    for (const responseTransaction of responseTransactionList) {
-                        let found = false;
-                        for (const existingTransaction of existingTransactionList) {
-                            if (existingTransaction.description === responseTransaction.description) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            const dateString = responseTransaction.transactionDate ?? '';
-                            const ddmmyyyy = dayjs(dateString, 'DD/MM/YYYY HH:mm:ss').format('YYYYMMDD')
-                            responseTransaction.transactionDateFormat = parseInt(ddmmyyyy)
-                            differentTransactions.push(responseTransaction);
-                        }
-                    }
 
-                    await Transaction.insertMany(differentTransactions)
+                await Transaction.insertMany(differentTransactions)
 
-                    if (differentTransactions.length > 0) {
-                        differentTransactions.forEach(async (transaction) => {
-                            await updateBookingByTransaction(transaction);
-                            const identifier = await updateBlanceByTransaction(transaction)
-                            if (identifier !== '') {
-                                io.emit('identifier', identifier);
-                            }
-                        });
-                        io.emit('transactions', differentTransactions);
-                        console.log('Update')
-                    } else {
-                        if (io.sockets.server.engine.clientsCount > 0) {
-                            io.close();
+                if (differentTransactions.length > 0) {
+                    differentTransactions.forEach(async (transaction) => {
+                        await updateBookingByTransaction(transaction);
+                        const identifier = await updateBlanceByTransaction(transaction)
+                        if (identifier !== '') {
+                            io.emit('identifier', identifier);
                         }
-                        console.log('No update')
+                    });
+                    io.emit('transactions', differentTransactions);
+                    console.log('Update')
+                } else {
+                    if (io.sockets.server.engine.clientsCount > 0) {
+                        io.close();
                     }
+                    console.log('No update')
                 }
             }
         }
@@ -361,20 +358,27 @@ const updateTransacion = async () => {
     } catch (error) {
         console.error('Error calling API:', error.message);
     } finally {
-        callAgain = true
+        callUpdateTransacion = true
         console.log('Hoàn tất công việc')
     }
 }
 
 schedule.scheduleJob('*/15 * * * * *', async () => {
-    const existingValue = callAgain
-    console.log('callAgain', existingValue)
-    if (existingValue === false && isHasKey === true) {
+    console.log('callAgain', callUpdateTransacion, isHasKey)
+
+    if (isHasKey === false) {
+        await fetchKey()
+        return;
+    }
+    
+    if (callUpdateTransacion === false && isHasKey === true) {
         console.log('Công việc đang chạy, bỏ qua lần chạy mới')
         return;
     }
-    if (existingValue === true) {
+
+    if (callUpdateTransacion === true & isHasKey === true) {
         await updateTransacion()
+        return;
     }
 });
 
@@ -411,7 +415,7 @@ const updateListPrice = async () => {
                         Month: monthValue,
                         Year: `${yearValue}`,
                     }, headers);
-                    if(responses.ListFare){
+                    if (responses.ListFare) {
                         data.push(...responses.ListFare);
                     }
                 }
@@ -429,18 +433,18 @@ const updateListPrice = async () => {
         if (existValue > 0) {
             await MinPrice.deleteMany();
             await MinPrice.insertMany(data);
-        }else{
+        } else {
             await MinPrice.insertMany(data);
         }
 
     } catch (error) {
         console.error({ error: 'Không thể cập nhật dữ liệu mới.' }, error);
-    }finally{
+    } finally {
         console.log('Cập nhật giá kết thúc');
     }
 }
 
-schedule.scheduleJob('40 * * * *', async () => {
+schedule.scheduleJob('45 * * * *', async () => {
     try {
         await updateListPrice();
     } catch (error) {
