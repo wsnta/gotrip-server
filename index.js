@@ -251,9 +251,11 @@ const updateTransacion = async () => {
     try {
         if (callAgain === true) {
             console.log('Đang nhận session')
+            callAgain = false
             const call = await fetchKey()
             callAgain = call
         } else {
+            callAgain = false
             const currentDate = new Date();
             const toDate = new Date().toLocaleDateString('vi-VN', {
                 day: '2-digit',
@@ -361,7 +363,6 @@ const updateTransacion = async () => {
 }
 
 schedule.scheduleJob('*/15 * * * * *', async () => {
-
     if (callAgain === false) {
         console.log('Công việc đang chạy, bỏ qua lần chạy mới')
         return;
