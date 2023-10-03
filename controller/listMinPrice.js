@@ -8,7 +8,7 @@ dotenv.config();
 exports.getListPrice = async (req, res) => {
     try {
         const page = req.query.page || 1;
-        const itemsPerPage = 6;
+        const itemsPerPage = req.query.itemsPerPage || 6;
 
         const startIndex = (page - 1) * itemsPerPage;
         const endIndex = page * itemsPerPage;

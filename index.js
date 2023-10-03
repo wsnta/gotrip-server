@@ -258,7 +258,6 @@ const fetchKey = async () => {
 
 const updateTransacion = async () => {
     try {
-        console.log('Đã vào')
         const currentDate = new Date();
         const toDate = new Date().toLocaleDateString('vi-VN', {
             day: '2-digit',
@@ -307,7 +306,6 @@ const updateTransacion = async () => {
             }
         });
         const response = apiResponse.data;
-        console.log(response)
         if (response.result.ok === false) {
             await fetchKey()
             return
@@ -432,7 +430,6 @@ const updateListPrice = async () => {
         
 
         const existValue = await MinPrice.count();
-        console.log(data.length, existValue)
         if (existValue > 0) {
             await MinPrice.deleteMany();
             await MinPrice.insertMany(data);
