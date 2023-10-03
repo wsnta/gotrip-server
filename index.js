@@ -220,10 +220,11 @@ const updateBookingByTransaction = async (transaction) => {
 let sessionId = ''
 let deviceIdCommon = ''
 let callAgain = true;
-let isRunning = false;
+let isHasKey = false;
 
 const fetchKey = async () => {
     try {
+        callAgain = false
         const res = await axios.get('https://khodosi.com/bookings/getsession.php');
         const rawData = res.data;
         const sessionIdMatch = rawData.match(/"sessionId": "([^"]+)"/);
@@ -235,26 +236,30 @@ const fetchKey = async () => {
             sessionId = sessionIdf
             deviceIdCommon = deviceIdCommonf
             console.log(deviceIdCommonf, sessionIdf)
+            isHasKey = true
             callAgain = false
         } else {
             console.error('Data not found in the response.');
             callAgain = true
+            isHasKey = false
         }
     } catch (error) {
         console.error('Error fetching key:', error.message);
         sessionId = ''
         deviceIdCommon = ''
-        callAgain = true
+        callAgain = true,
+        isHasKey = false
     }
 };
 
 const updateTransacion = async () => {
     try {
         const existingValue = callAgain
-        if (existingValue === true) {
+        const existingHasKey = isHasKey
+        if (existingValue === true && existingHasKey === false) {
             console.log('Đang nhận session')
             await fetchKey()
-            return;
+            return
         } else {
             const currentDate = new Date();
             const toDate = new Date().toLocaleDateString('vi-VN', {
@@ -304,10 +309,11 @@ const updateTransacion = async () => {
                 }
             });
             const response = apiResponse.data;
+            console.log(response)
             if (response.result.ok === false) {
                 await fetchKey()
                 console.log('Gọi lại', call)
-                return;
+                return
             } else {
                 const existingBooking = await Transaction.find() ?? [];
                 const existingTransactionList = existingBooking
@@ -362,11 +368,12 @@ const updateTransacion = async () => {
 
 schedule.scheduleJob('*/15 * * * * *', async () => {
     const existingValue = callAgain
-    console.log('existingValue', existingValue)
-    if (existingValue === false) {
+    console.log('callAgain', existingValue)
+    if (existingValue === false && isHasKey === true) {
         console.log('Công việc đang chạy, bỏ qua lần chạy mới')
         return;
-    }else{
+    }
+    if (existingValue === true) {
         await updateTransacion()
     }
 });
