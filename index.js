@@ -5,13 +5,14 @@ const cors = require('cors')
 const axios = require('axios');
 const schedule = require('node-schedule');
 const User = require('./model/userInf')
+const MinPrice = require('./model/listMinPrice');
+const Transaction = require('./model/transaction');
 const Booking = require('./model/bookingModel');
 const compression = require('compression');
 const dayjs = require('dayjs')
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
 
-const Transaction = require('./model/transaction');
 
 const app = express()
 const route = require('./routes/route');
@@ -358,7 +359,64 @@ schedule.scheduleJob('*/10 * * * * *', async () => {
     }
 });
 
+const updateListPrice = async () => {
+    try {
+        console.log('Đang cập nhật danh sách giá');
 
+        const today = dayjs();
+        const inputArray = ["HAN", "DAD", "CXR", "SGN", "VCL"];
+        const targetMonth = today.format("MM");
+        const targetYear = today.format("YYYY");
+        const data = [];
+        const headers = {};
+
+        for (let i = 0; i < 10; i++) {
+            for (let j = 0; j < inputArray.length; j++) {
+                for (let k = j; k < inputArray.length; k++) {
+                    const productKey = "r1e0q6z8md6akul";
+                    const monthValue = targetMonth;
+                    const yearValue = parseInt(targetYear);
+                    const startPoint = inputArray[j];
+                    const endPoint = inputArray[k];
+
+                    const responses = await fetchFlightData({
+                        ProductKey: productKey,
+                        StartPoint: startPoint,
+                        EndPoint: endPoint,
+                        Month: monthValue,
+                        Year: `${yearValue}`,
+                    }, headers);
+
+                    data.push(...responses.ListFare);
+                }
+            }
+
+            if (targetMonth === "12") {
+                targetMonth = "01";
+                targetYear++;
+            } else {
+                targetMonth = (parseInt(targetMonth) + 1).toString().padStart(2, '0');
+            }
+        }
+
+        const existValue = await MinPrice.countDocuments();
+        if (existValue > 0) {
+            await MinPrice.deleteMany();
+        }
+        await MinPrice.insertMany(data);
+
+    } catch (error) {
+        console.error({ error: 'Không thể cập nhật dữ liệu mới.' }, error);
+    }
+}
+
+schedule.scheduleJob('0 * * * *', async () => {
+    try {
+        await updateListPrice();
+    } catch (error) {
+        console.error("Cập nhật danh sách giá rẻ thất bại", error);
+    }
+});
 
 httpServer.listen(POST, () => {
     console.log(`The server is running on ${POST}`);
