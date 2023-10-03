@@ -19,6 +19,6 @@ const minPriceSchema = new mongoose.Schema({
     collection: 'minPrice'
 });
 
-const MinPrice = listDb.model('transaction', minPriceSchema);
+const MinPrice = listDb.model('minPrice', minPriceSchema);
 
 module.exports = MinPrice;
