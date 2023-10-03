@@ -395,7 +395,7 @@ const updateListPrice = async () => {
         const data = [];
         const headers = {};
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 4; i++) {
             for (let j = 0; j < inputArray.length; j++) {
                 for (let k = j; k < inputArray.length; k++) {
                     const productKey = "r1e0q6z8md6akul";
@@ -435,6 +435,8 @@ const updateListPrice = async () => {
 
     } catch (error) {
         console.error({ error: 'Không thể cập nhật dữ liệu mới.' }, error);
+    }finally{
+        console.log('Cập nhật giá kết thúc');
     }
 }
 
