@@ -234,6 +234,7 @@ const fetchKey = async () => {
             const deviceIdCommonf = deviceIdCommonMatch[1];
             sessionId = sessionIdf
             deviceIdCommon = deviceIdCommonf
+            console.log(deviceIdCommonf, sessionIdf)
             return false
         } else {
             console.error('Data not found in the response.');
