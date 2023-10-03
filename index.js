@@ -394,8 +394,8 @@ const updateListPrice = async () => {
 
         const today = dayjs();
         const inputArray = ["HAN", "DAD", "CXR", "SGN", "VCL"];
-        const targetMonth = today.format("MM");
-        const targetYear = today.format("YYYY");
+        let targetMonth = parseInt(today.format("MM"));
+        let targetYear = parseInt(today.format("YYYY"));
         const data = [];
         const headers = {};
 
@@ -421,15 +421,18 @@ const updateListPrice = async () => {
                 }
             }
 
-            if (targetMonth === "12") {
-                targetMonth = "01";
+            if (parseInt(targetMonth) === 12) {
+                targetMonth = 01;
                 targetYear++;
             } else {
                 targetMonth = (parseInt(targetMonth) + 1).toString().padStart(2, '0');
             }
         }
 
-        const existValue = await MinPrice.countDocuments();
+        
+
+        const existValue = await MinPrice.count();
+        console.log(data.length, existValue)
         if (existValue > 0) {
             await MinPrice.deleteMany();
             await MinPrice.insertMany(data);
@@ -444,7 +447,7 @@ const updateListPrice = async () => {
     }
 }
 
-schedule.scheduleJob('45 * * * *', async () => {
+schedule.scheduleJob('52 * * * *', async () => {
     try {
         await updateListPrice();
     } catch (error) {

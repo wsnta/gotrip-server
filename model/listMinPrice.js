@@ -4,10 +4,7 @@ const listDbHost = process.env.LIST_MIN_PRICE
 const listDb = mongoose.createConnection(listDbHost);
 
 const minPriceSchema = new mongoose.Schema({
-    Key: {
-        type: String,
-        require: true
-    },
+    Key: String,
     DepartDate: String,
     Airline: String,
     MinFareAdt: Number,
