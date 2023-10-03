@@ -411,8 +411,9 @@ const updateListPrice = async () => {
                         Month: monthValue,
                         Year: `${yearValue}`,
                     }, headers);
-
-                    data.push(responses);
+                    if(responses.ListFare){
+                        data.push(...responses.ListFare);
+                    }
                 }
             }
 
@@ -427,15 +428,17 @@ const updateListPrice = async () => {
         const existValue = await MinPrice.countDocuments();
         if (existValue > 0) {
             await MinPrice.deleteMany();
+            await MinPrice.insertMany(data);
+        }else{
+            await MinPrice.insertMany(data);
         }
-        await MinPrice.insertMany(data);
 
     } catch (error) {
         console.error({ error: 'Không thể cập nhật dữ liệu mới.' }, error);
     }
 }
 
-schedule.scheduleJob('0 * * * *', async () => {
+schedule.scheduleJob('*/15 * * * * *', async () => {
     try {
         await updateListPrice();
     } catch (error) {
