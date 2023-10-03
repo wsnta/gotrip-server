@@ -5,12 +5,6 @@ const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
 dotenv.config();
 
-const fetchFlightData = async (item, headers) => {
-    return (await axios.post("http://plugin.datacom.vn/flightmonth", item, {
-        headers: headers
-    })).data;
-};
-
 // const fetchRequests = [];
 
 // for (let j = 0; j < inputArray.length; j++) {

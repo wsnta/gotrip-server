@@ -377,6 +377,12 @@ schedule.scheduleJob('*/15 * * * * *', async () => {
     }
 });
 
+const fetchFlightPrice = async (item, headers) => {
+    return (await axios.post("http://plugin.datacom.vn/flightmonth", item, {
+        headers: headers
+    })).data;
+};
+
 const updateListPrice = async () => {
     try {
         console.log('Đang cập nhật danh sách giá');
@@ -397,7 +403,7 @@ const updateListPrice = async () => {
                     const startPoint = inputArray[j];
                     const endPoint = inputArray[k];
 
-                    const responses = await fetchFlightData({
+                    const responses = await fetchFlightPrice({
                         ProductKey: productKey,
                         StartPoint: startPoint,
                         EndPoint: endPoint,
