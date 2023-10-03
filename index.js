@@ -220,6 +220,7 @@ const updateBookingByTransaction = async (transaction) => {
 let sessionId = ''
 let deviceIdCommon = ''
 let callAgain = true;
+let isRunning = false;
 
 const fetchKey = async () => {
     try {
@@ -247,8 +248,14 @@ const fetchKey = async () => {
 };
 
 schedule.scheduleJob('*/15 * * * * *', async () => {
-    try {
 
+    if(isRunning){
+        console.log('Công việc đang chạy, bỏ qua lần chạy mới')
+        return;
+    }
+
+    try {
+        isRunning = true
         if (callAgain === true) {
             console.log('Đang nhận session')
             const call = await fetchKey()
@@ -355,7 +362,9 @@ schedule.scheduleJob('*/15 * * * * *', async () => {
 
     } catch (error) {
         console.error('Error calling API:', error.message);
+    }finally{
         callAgain = true
+        isRunning = false
     }
 });
 
