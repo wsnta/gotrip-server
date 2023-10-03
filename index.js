@@ -220,7 +220,6 @@ const updateBookingByTransaction = async (transaction) => {
 let sessionId = ''
 let deviceIdCommon = ''
 let callAgain = true;
-let success = false;
 
 const fetchKey = async () => {
     try {
@@ -247,122 +246,118 @@ const fetchKey = async () => {
     }
 };
 
-if(success){
-    schedule.scheduleJob('*/10 * * * * *', async () => {
-        try {
-            success = false
-            if (callAgain === true) {
-                console.log('Đang nhận session')
+schedule.scheduleJob('*/15 * * * * *', async () => {
+    try {
+
+        if (callAgain === true) {
+            console.log('Đang nhận session')
+            const call = await fetchKey()
+            callAgain = call
+        } else {
+
+            const currentDate = new Date();
+            const toDate = new Date().toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            currentDate.setDate(currentDate.getDate() - 1);
+
+            const fromDate = currentDate.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            const taikhoanmb = '0984227777';
+            const sotaikhoanmb = '0984227777';
+            const apiResponse = await axios.post('https://online.mbbank.com.vn/api/retail-web-transactionservice/transaction/getTransactionAccountHistory', {
+                accountNo: sotaikhoanmb,
+                deviceIdCommon: deviceIdCommon,
+                fromDate: fromDate,
+                historyNumber: '',
+                historyType: 'DATE_RANGE',
+                refNo: `${taikhoanmb}-${toDate}`,
+                sessionId: sessionId,
+                toDate: toDate,
+                type: 'ACCOUNT'
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Accept-Language': 'vi-US,vi;q=0.9',
+                    'Authorization': 'Basic QURNSU46QURNSU4=',
+                    'Connection': 'keep-alive',
+                    'Host': 'online.mbbank.com.vn',
+                    'Origin': 'https://online.mbbank.com.vn',
+                    'Referer': 'https://online.mbbank.com.vn/information-account/source-account',
+                    'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin',
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+                }
+            });
+            const response = apiResponse.data;
+            if (response.result.ok === false) {
                 const call = await fetchKey()
+                console.log('Gọi lại', call)
                 callAgain = call
             } else {
-    
-                const currentDate = new Date();
-                const toDate = new Date().toLocaleDateString('vi-VN', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-    
-                currentDate.setDate(currentDate.getDate() - 1);
-    
-                const fromDate = currentDate.toLocaleDateString('vi-VN', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                });
-    
-                const taikhoanmb = '0984227777';
-                const sotaikhoanmb = '0984227777';
-                const apiResponse = await axios.post('https://online.mbbank.com.vn/api/retail-web-transactionservice/transaction/getTransactionAccountHistory', {
-                    accountNo: sotaikhoanmb,
-                    deviceIdCommon: deviceIdCommon,
-                    fromDate: fromDate,
-                    historyNumber: '',
-                    historyType: 'DATE_RANGE',
-                    refNo: `${taikhoanmb}-${toDate}`,
-                    sessionId: sessionId,
-                    toDate: toDate,
-                    type: 'ACCOUNT'
-                }, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json, text/plain, */*',
-                        'Accept-Encoding': 'gzip, deflate, br',
-                        'Accept-Language': 'vi-US,vi;q=0.9',
-                        'Authorization': 'Basic QURNSU46QURNSU4=',
-                        'Connection': 'keep-alive',
-                        'Host': 'online.mbbank.com.vn',
-                        'Origin': 'https://online.mbbank.com.vn',
-                        'Referer': 'https://online.mbbank.com.vn/information-account/source-account',
-                        'sec-ch-ua': '"Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"',
-                        'sec-ch-ua-mobile': '?0',
-                        'sec-ch-ua-platform': '"Windows"',
-                        'Sec-Fetch-Dest': 'empty',
-                        'Sec-Fetch-Mode': 'cors',
-                        'Sec-Fetch-Site': 'same-origin',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+                console.log('Không gọi lại')
+                callAgain = false
+                const existingBooking = await Transaction.find() ?? [];
+                const existingTransactionList = existingBooking
+                const responseTransactionList = response.transactionHistoryList;
+                if (responseTransactionList.length > 0) {
+                    const differentTransactions = [];
+                    for (const responseTransaction of responseTransactionList) {
+                        let found = false;
+                        for (const existingTransaction of existingTransactionList) {
+                            if (existingTransaction.description === responseTransaction.description) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            const dateString = responseTransaction.transactionDate ?? '';
+                            const ddmmyyyy = dayjs(dateString, 'DD/MM/YYYY HH:mm:ss').format('YYYYMMDD')
+                            responseTransaction.transactionDateFormat = parseInt(ddmmyyyy)
+                            differentTransactions.push(responseTransaction);
+                        }
                     }
-                });
-                const response = apiResponse.data;
-                if (response.result.ok === false) {
-                    const call = await fetchKey()
-                    console.log('Gọi lại', call)
-                    callAgain = call
-                } else {
-                    console.log('Không gọi lại')
-                    callAgain = false
-                    const existingBooking = await Transaction.find() ?? [];
-                    const existingTransactionList = existingBooking
-                    const responseTransactionList = response.transactionHistoryList;
-                    if (responseTransactionList.length > 0) {
-                        const differentTransactions = [];
-                        for (const responseTransaction of responseTransactionList) {
-                            let found = false;
-                            for (const existingTransaction of existingTransactionList) {
-                                if (existingTransaction.description === responseTransaction.description) {
-                                    found = true;
-                                    break;
-                                }
+
+                    await Transaction.insertMany(differentTransactions)
+
+                    if (differentTransactions.length > 0) {
+                        differentTransactions.forEach(async (transaction) => {
+                            updateBookingByTransaction(transaction);
+                            const identifier = await updateBlanceByTransaction(transaction)
+                            if (identifier !== '') {
+                                io.emit('identifier', identifier);
                             }
-                            if (!found) {
-                                const dateString = responseTransaction.transactionDate ?? '';
-                                const ddmmyyyy = dayjs(dateString, 'DD/MM/YYYY HH:mm:ss').format('YYYYMMDD')
-                                responseTransaction.transactionDateFormat = parseInt(ddmmyyyy)
-                                differentTransactions.push(responseTransaction);
-                            }
+                        });
+                        io.emit('transactions', differentTransactions);
+                        console.log('Update')
+                    } else {
+                        if (io.sockets.server.engine.clientsCount > 0) {
+                            io.close();
                         }
-    
-                        await Transaction.insertMany(differentTransactions)
-    
-                        if (differentTransactions.length > 0) {
-                            differentTransactions.forEach(async (transaction) => {
-                                updateBookingByTransaction(transaction);
-                                const identifier = await updateBlanceByTransaction(transaction)
-                                if (identifier !== '') {
-                                    io.emit('identifier', identifier);
-                                }
-                            });
-                            io.emit('transactions', differentTransactions);
-                            console.log('Update')
-                        } else {
-                            if (io.sockets.server.engine.clientsCount > 0) {
-                                io.close();
-                            }
-                            console.log('No update')
-                        }
+                        console.log('No update')
                     }
                 }
             }
-    
-        } catch (error) {
-            console.error('Error calling API:', error.message);
-            callAgain = true
-        }finally{
-            success = true
         }
-    });
-}
+
+    } catch (error) {
+        console.error('Error calling API:', error.message);
+        callAgain = true
+    }
+});
 
 const updateListPrice = async () => {
     try {
