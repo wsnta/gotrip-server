@@ -8,10 +8,14 @@ const minPriceSchema = new mongoose.Schema({
     DepartDate: String,
     Airline: String,
     MinFareAdt: Number,
+    StartPoint: String,
+    Month: Number,
+    Day: Number,
+    EndPoint: String,
     MinTotalAdt: Number,
     MinFareAdtFormat: String,
     MinTotalAdtFormat: String,
-    ListFareData: [mongoose.Schema.Types.Mixed]
+    // ListFareData: [mongoose.Schema.Types.Mixed]
 }, {
     collection: 'minPrice'
 });

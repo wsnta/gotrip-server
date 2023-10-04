@@ -13,7 +13,6 @@ const dayjs = require('dayjs')
 const customParseFormat = require('dayjs/plugin/customParseFormat');
 dayjs.extend(customParseFormat);
 
-
 const app = express()
 const route = require('./routes/route');
 const POST = 7777
@@ -306,6 +305,7 @@ const updateTransacion = async () => {
             }
         });
         const response = apiResponse.data;
+        console.log(response.result.ok)
         if (response.result.ok === false) {
             await fetchKey()
             return
@@ -362,7 +362,7 @@ const updateTransacion = async () => {
 }
 
 schedule.scheduleJob('*/15 * * * * *', async () => {
-    console.log('callAgain', callUpdateTransacion, isHasKey)
+    // console.log('callAgain', callUpdateTransacion, isHasKey)
 
     if (isHasKey === false) {
         await fetchKey()
@@ -413,21 +413,26 @@ const updateListPrice = async () => {
                         Month: monthValue,
                         Year: `${yearValue}`,
                     }, headers);
-                    if (responses.ListFare) {
-                        data.push(...responses.ListFare);
+                    if (responses.ListFare && Array.isArray(responses.ListFare)) {
+                        const modifiedListFare = responses.ListFare.map(fare => ({
+                            ...fare,
+                            StartPoint: startPoint,
+                            EndPoint: endPoint,
+                            Month: monthValue,
+                            Day: parseInt(dayjs(fare.DepartDate, 'DDMMYYYY').format("DD"))
+                          }));
+                        data.push(...modifiedListFare);
                     }
                 }
             }
 
             if (parseInt(targetMonth) === 12) {
-                targetMonth = 01;
+                targetMonth = parseInt('01');
                 targetYear++;
             } else {
                 targetMonth = (parseInt(targetMonth) + 1).toString().padStart(2, '0');
             }
         }
-
-        
 
         const existValue = await MinPrice.count();
         if (existValue > 0) {
@@ -444,7 +449,7 @@ const updateListPrice = async () => {
     }
 }
 
-schedule.scheduleJob('52 * * * *', async () => {
+schedule.scheduleJob('51 * * * *', async () => {
     try {
         await updateListPrice();
     } catch (error) {

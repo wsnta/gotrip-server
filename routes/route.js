@@ -36,6 +36,7 @@ router.delete('/delete-by-admin/:bookingId', Booking.deleteBookingById)
 router.get('/invoice-request', Booking.getInvoice)
 
 router.get('/list-price', MinPrice.getListPrice);
+router.get('/getListPriceCalendar', MinPrice.getListPriceCalendar)
 
 router.get('/getTransactionData', Transaction.getTransactions);
 router.get('/get-user-inf/:userId', User.getUserInf);
