@@ -392,7 +392,7 @@ const updateListPrice = async () => {
 
         const today = dayjs();
         const inputArray = ["HAN", "DAD", "CXR", "SGN", "VCL"];
-        let targetMonth = parseInt(today.format("MM"));
+        let targetMonth = parseInt(today.format("MM"), 10);
         let targetYear = parseInt(today.format("YYYY"));
         const data = [];
         const headers = {};
@@ -418,19 +418,20 @@ const updateListPrice = async () => {
                             ...fare,
                             StartPoint: startPoint,
                             EndPoint: endPoint,
+                            DepartDate: parseInt(dayjs(fare.DepartDate, 'DDMMYYYY').format('YYYYMMDD')),
                             Month: monthValue,
-                            Day: parseInt(dayjs(fare.DepartDate, 'DDMMYYYY').format("DD"))
+                            Day: parseInt(dayjs(fare.DepartDate, 'DDMMYYYY').format("DD"), 10)
                           }));
                         data.push(...modifiedListFare);
                     }
                 }
             }
 
-            if (parseInt(targetMonth) === 12) {
-                targetMonth = parseInt('01');
+            if (targetMonth === 12) {
+                targetMonth = 1;
                 targetYear++;
             } else {
-                targetMonth = (parseInt(targetMonth) + 1).toString().padStart(2, '0');
+                targetMonth = (targetMonth + 1);
             }
         }
 
@@ -449,7 +450,7 @@ const updateListPrice = async () => {
     }
 }
 
-schedule.scheduleJob('51 * * * *', async () => {
+schedule.scheduleJob('21 * * * *', async () => {
     try {
         await updateListPrice();
     } catch (error) {

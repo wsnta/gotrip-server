@@ -5,7 +5,7 @@ const listDb = mongoose.createConnection(listDbHost);
 
 const minPriceSchema = new mongoose.Schema({
     Key: String,
-    DepartDate: String,
+    DepartDate: Number,
     Airline: String,
     MinFareAdt: Number,
     StartPoint: String,
@@ -15,7 +15,6 @@ const minPriceSchema = new mongoose.Schema({
     MinTotalAdt: Number,
     MinFareAdtFormat: String,
     MinTotalAdtFormat: String,
-    // ListFareData: [mongoose.Schema.Types.Mixed]
 }, {
     collection: 'minPrice'
 });

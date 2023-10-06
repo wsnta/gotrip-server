@@ -8,42 +8,25 @@ dotenv.config();
 
 exports.getListPrice = async (req, res) => {
     try {
-        const page = req.query.page || 1;
-        const itemsPerPage = req.query.itemsPerPage || 5;
-        const month = dayjs(req.query.departDate, "DDMMYYYY").format('MM') || dayjs().format('MM');
-        const day = dayjs(req.query.departDate, "DDMMYYYY").format('DD') || dayjs().format('DD');
-        const startPoint = req.query.startPoint || '';
-        const endPoint = req.query.endPoint || '';
-        
-        const totalCount = await MinPrice.countDocuments({
-            Month: parseInt(month),
+        const { nextprev, DepartDate, startPoint, endPoint } = req.query;
+        const limit = 5; 
+
+        // Chuyển định dạng của departDate từ YYYYMMDD thành một số để so sánh
+        const formattedDepartDate = dayjs(DepartDate, 'DDMMYYYY').format('YYYYMMDD');
+
+        let query = {
+            DepartDate: { $gte: formattedDepartDate },
             StartPoint: startPoint,
             EndPoint: endPoint
-        });
-
-        const startIndex = (page - 1) * itemsPerPage;
-        
-        const endIndex = page * itemsPerPage;
-
-        const data = await MinPrice.find({
-            Month: {$gte: parseInt(month) - 1},
-            StartPoint: startPoint,
-            EndPoint: endPoint,
-            Day: {$gte: parseInt(day) - 1}
-        }).skip(startIndex).limit(itemsPerPage);
-
-        const totalPages = Math.ceil(totalCount / itemsPerPage);
-
+        };
+        const results = await MinPrice.find(query).sort({DepartDate: 1})
         res.json({
-            data: data,
-            totalPages: totalPages,
-            totalCount: totalCount,
-            currentPage: page,
-            endIndex: endIndex
+            prices: results,
+            message: '',
         });
-
     } catch (error) {
-        res.status(500).json({ error: 'Không thể lấy dữ liệu.' + error });
+        console.error(error);
+        res.status(500).json({ error: 'Đã xảy ra lỗi' });
     }
 }
 
