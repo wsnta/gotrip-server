@@ -25,14 +25,29 @@ exports.getListPrice = async (req, res) => {
         if(skipReq){
             skip = parseInt(skipReq)
         }
+
+        const defaultResult = await MinPrice.countDocuments(query).skip(skip).limit(parseInt(limit))
        
-        const results = await MinPrice.aggregate([
-            {
-                $match: query,
-            },
-            { $skip: skip },
-            { $limit: parseInt(limit) },
-        ])
+        let results = []
+
+        if(defaultResult < 5){
+           results = await MinPrice.aggregate([
+                {
+                    $match: query,
+                },
+                { $skip: totalCount - 5 },
+                { $limit: parseInt(limit) },
+            ])
+            skip = totalCount - 5
+        }else{
+            results = await MinPrice.aggregate([
+                {
+                    $match: query,
+                },
+                { $skip: skip },
+                { $limit: parseInt(limit) },
+            ])
+        }
 
         res.json({
             prices: results,
