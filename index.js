@@ -235,7 +235,7 @@ const fetchKey = async () => {
             const deviceIdCommonf = deviceIdCommonMatch[1];
             sessionId = sessionIdf
             deviceIdCommon = deviceIdCommonf
-            console.log(deviceIdCommonf, sessionIdf)
+            // console.log(deviceIdCommonf, sessionIdf)
             isHasKey = true
             callAgain = false
             callUpdateTransacion = true
@@ -305,7 +305,7 @@ const updateTransacion = async () => {
             }
         });
         const response = apiResponse.data;
-        console.log(response.result.ok)
+        // console.log(response.result.ok)
         if (response.result.ok === false) {
             await fetchKey()
             return
@@ -357,7 +357,7 @@ const updateTransacion = async () => {
         console.error('Error calling API:', error.message);
     } finally {
         callUpdateTransacion = true
-        console.log('Hoàn tất công việc')
+        // console.log('Hoàn tất công việc')
     }
 }
 
@@ -420,7 +420,8 @@ const updateListPrice = async () => {
                             EndPoint: endPoint,
                             DepartDate: parseInt(dayjs(fare.DepartDate, 'DDMMYYYY').format('YYYYMMDD')),
                             Month: monthValue,
-                            Day: parseInt(dayjs(fare.DepartDate, 'DDMMYYYY').format("DD"), 10)
+                            Day: parseInt(dayjs(fare.DepartDate, 'DDMMYYYY').format("DD"), 10),
+                            Year: yearValue
                           }));
                         data.push(...modifiedListFare);
                     }
@@ -450,7 +451,7 @@ const updateListPrice = async () => {
     }
 }
 
-schedule.scheduleJob('21 * * * *', async () => {
+schedule.scheduleJob('11 * * * *', async () => {
     try {
         await updateListPrice();
     } catch (error) {

@@ -1,0 +1,85 @@
+const dotenv = require('dotenv');
+const dayjs = require('dayjs');
+const axios = require('axios');
+const MinPrice = require('../model/listMinPrice');
+const customParseFormat = require('dayjs/plugin/customParseFormat');
+dayjs.extend(customParseFormat);
+dotenv.config();
+
+exports.getListPrice = async (req, res) => {
+    try {
+        const { DepartDate, startPoint, endPoint, itemsPerPage, Key, page } = req.query;
+
+        let currentPage = page || 1;
+
+        const formatDate = parseInt(dayjs(DepartDate, 'DDMMYYYY').format('YYYYMMDD'))
+
+        const query = {
+            StartPoint: startPoint,
+            EndPoint: endPoint,
+            DepartDate: { $gte: formatDate },
+        }
+
+        const totalCount = await MinPrice.countDocuments(query)
+        let startSkip = (page - 1) * itemsPerPage;
+
+        if (Key) {
+            const index = (await MinPrice.find(query)).findIndex(obj => obj.Key === Key)
+            startSkip = index
+            currentPage = Math.ceil(index / itemsPerPage)
+            if (index + 5 >= totalCount) {
+                startSkip = totalCount - 5
+            }
+        }
+
+        let message = ''
+
+        const prices = await MinPrice.find(query).skip(startSkip).limit(itemsPerPage)
+
+        if (totalCount < startSkip + 5) {
+            let remainingItems = (startSkip + 5) - totalCount;
+            const reversedPrices = await MinPrice.find({
+                StartPoint: startPoint,
+                EndPoint: endPoint,
+                DepartDate: { $gte: formatDate },
+            })
+                .limit(remainingItems);
+            prices.unshift(...reversedPrices);
+            startSkip = startSkip + remainingItems
+            message = 'Đã đầy'
+            remainingItems = 0
+        }
+
+        if (startSkip <= 0) {
+            message = 'Đầu'
+            startSkip = 0
+        }
+
+
+        res.status(200).json({
+            prices: prices,
+            message: message,
+            totalCount: totalCount
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+exports.getListPriceCalendar = async (req, res) => {
+    try {
+        const month = dayjs(req.query.month, "DDMMYYYY").format('MM') || dayjs().format('MM');
+        const startPoint = req.query.startPoint || ''
+        const endPoint = req.query.endPoint || ''
+        const data = await MinPrice.find({
+            StartPoint: startPoint,
+            EndPoint: endPoint
+        });
+
+        res.json(data);
+
+    } catch (error) {
+        res.status(500).json({ error: 'Không thể lấy dữ liệu.' + error });
+    }
+}

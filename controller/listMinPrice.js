@@ -8,21 +8,37 @@ dotenv.config();
 
 exports.getListPrice = async (req, res) => {
     try {
-        const { nextprev, DepartDate, startPoint, endPoint } = req.query;
-        const limit = 5; 
-
-        // Chuyển định dạng của departDate từ YYYYMMDD thành một số để so sánh
-        const formattedDepartDate = dayjs(DepartDate, 'DDMMYYYY').format('YYYYMMDD');
+        const { DepartDate, startPoint, endPoint, skipReq, limit } = req.query;
 
         let query = {
-            DepartDate: { $gte: formattedDepartDate },
             StartPoint: startPoint,
-            EndPoint: endPoint
-        };
-        const results = await MinPrice.find(query).sort({DepartDate: 1})
+            EndPoint: endPoint,
+        }
+
+        const totalCount = await MinPrice.countDocuments(query)
+
+        let skip = (await MinPrice.aggregate([{
+            $match: query,
+        }])).findIndex(
+            (item) => item.DepartDate === parseInt(dayjs(DepartDate, 'DDMMYYYY').format('YYYYMMDD')))
+        
+        if(skipReq){
+            skip = parseInt(skipReq)
+        }
+       
+        const results = await MinPrice.aggregate([
+            {
+                $match: query,
+            },
+            { $skip: skip },
+            { $limit: parseInt(limit) },
+        ])
+
         res.json({
             prices: results,
             message: '',
+            totalCount: totalCount,
+            targetSkip: skip
         });
     } catch (error) {
         console.error(error);

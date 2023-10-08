@@ -11,6 +11,7 @@ const minPriceSchema = new mongoose.Schema({
     StartPoint: String,
     Month: Number,
     Day: Number,
+    Year: Number,
     EndPoint: String,
     MinTotalAdt: Number,
     MinFareAdtFormat: String,
